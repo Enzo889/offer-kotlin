@@ -1,96 +1,95 @@
 package com.example.offerkotlin.ui.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.offerkotlin.data.model.Offer
 import com.example.offerkotlin.viewmodel.OfferViewModel
-
 @Composable
 fun OfferFormScreen(
+    navController: NavHostController,
     viewModel: OfferViewModel,
-    navController: NavController,
-    offerId: Int? = null
+    offerId: Int
 ) {
-    val offers by viewModel.offers.collectAsState()
-    val currentOffer = offers.find { it.id == offerId }
+    var name by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
 
-    var name by remember { mutableStateOf(currentOffer?.name ?: "") }
-    var price by remember { mutableStateOf(currentOffer?.price?.toString() ?: "") }
-    var location by remember { mutableStateOf(currentOffer?.location ?: "") }
+    LaunchedEffect(offerId) {
+        if (offerId != -1) {
+            val offer = viewModel.offers.value.find { it.id == offerId }
+            offer?.let {
+                name = it.name
+                price = it.price.toString()
+                description = it.description.toString()
+            }
+        }
+    }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            if (offerId == null) "Crear Nueva Oferta" else "Editar Oferta",
-            style = MaterialTheme.typography.headlineSmall
+            text = if (offerId == -1) "Create Offer" else "Edit Offer",
+            style = MaterialTheme.typography.headlineMedium
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Nombre") },
+            label = { Text("Name") },
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
             value = price,
             onValueChange = { price = it },
-            label = { Text("Precio") },
+            label = { Text("Price") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Ubicación") },
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
             modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = {
-                val offer = Offer(
-                    id = currentOffer?.id,
+                val newOffer = Offer(
+                    id = offerId,
                     name = name,
-                    price = price.toDoubleOrNull() ?: 0.0,
-                    location = location,
-                    image = currentOffer?.image ?: "https://placehold.co/100x100",
-                    stock = currentOffer?.stock ?: "Disponible",
-                    discount = currentOffer?.discount ?: 0,
-                    installments = currentOffer?.installments ?: "6x",
-                    shipping = currentOffer?.shipping ?: "Gratis",
-                    description = currentOffer?.description ?: "Sin descripción",
-                    category = currentOffer?.category ?: "General",
-                    categoryId = currentOffer?.categoryId ?: 0,
-                    condition = currentOffer?.condition ?: "Nuevo",
-                    seller = currentOffer?.seller ?: "Desconocido",
+                    price = price.toDouble(),
+                    description = description,
+                    image = "/default.jpg", // Hardcodeado por ahora
+                    stock = "Available",
+                    discount = 0,
+                    installments = "",
+                    shipping = "",
+                    categoryId = 0,
+                    condition = "new",
+                    seller = "Me",
+                    location = "Unknown",
                     isOwner = true
                 )
-
-                if (offerId == null) {
-                    viewModel.createOffer(offer)
+                if (offerId == -1) {
+                    viewModel.createOffer(newOffer)
                 } else {
-                    offer.id?.let { id -> viewModel.updateOffer(id, offer) }
+                    viewModel.updateOffer(offerId, newOffer)
                 }
                 navController.popBackStack()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (offerId == null) "Crear" else "Actualizar")
+            Text(if (offerId == -1) "Create" else "Update")
         }
     }
 }

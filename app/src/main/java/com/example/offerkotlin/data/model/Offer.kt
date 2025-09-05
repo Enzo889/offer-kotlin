@@ -3,17 +3,16 @@ package com.example.offerkotlin.data.model
 data class Offer(
     val id: Int? = null,
     val name: String,
-    val image: String,
-    val stock: String,
+    val image: String? = null,
+    val stock: String? = null,
     val price: Double,
-    val discount: Int?,
-    val installments: String?,
-    val shipping: String?,
-    val description: String,
-    val category: String,
-    val categoryId: Int,
+    val discount: Int? = null,
+    val installments: String? = null,
+    val shipping: String? = null,
+    val description: String? = null,
+    val categoryId: Int? = null,
     val condition: String,
-    val seller: String,
+    val seller: String? = null,
     val location: String,
-    val isOwner: Boolean
+    val isOwner: Boolean? = null
 )
