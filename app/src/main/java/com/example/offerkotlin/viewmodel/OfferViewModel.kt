@@ -30,6 +30,10 @@ class OfferViewModel : ViewModel() {
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message
 
+    private val _offerCreated = MutableSharedFlow<Unit>()
+    val offerCreated: SharedFlow<Unit> = _offerCreated
+
+
     init {
         fetchOffers()
     }
@@ -48,26 +52,40 @@ class OfferViewModel : ViewModel() {
     fun createOffer(offer: Offer) {
         viewModelScope.launch {
             try {
-                val newOffer = repository.createOffer(offer)
-                _offers.value = (_offers.value + newOffer) as List<Offer>
-                _message.value = "Oferta creada correctamente"
+                val response = repository.createOffer(offer)
+                val createdOffer = response.data
+                if (createdOffer != null) {
+                    _offers.value = _offers.value.toMutableList().apply { add(createdOffer) }
+                    _message.value = "Oferta creada correctamente"
+                    // Emite un evento para notificar a la UI
+                    _offerCreated.emit(Unit)
+                } else {
+                    _message.value = "Error: la API no devolvió la oferta creada"
+                }
             } catch (e: Exception) {
                 _message.value = "Error al crear: ${e.message}"
             }
         }
     }
 
+
     fun updateOffer(id: Int, offer: Offer) {
         viewModelScope.launch {
             try {
-                val updated = repository.updateOffer(id, offer)
-                _offers.value = _offers.value.map { (if (it.id == id) updated else it) as Offer }
-                _message.value = "Oferta actualizada"
+                val response = repository.updateOffer(id, offer)
+                val updatedOffer = response.data
+                if (updatedOffer != null) {
+                    _offers.value = _offers.value.map { if (it.id == id) updatedOffer else it }
+                    _message.value = "Oferta actualizada correctamente"
+                } else {
+                    _message.value = "Error: la API no devolvió datos"
+                }
             } catch (e: Exception) {
                 _message.value = "Error al actualizar: ${e.message}"
             }
         }
     }
+
 
     fun deleteOffer(id: Int?) {
         viewModelScope.launch {
@@ -96,15 +114,26 @@ class OfferViewModel : ViewModel() {
     }
 
     // -------- OFERTAS FILTRADAS --------
-    val filteredOffers = combine(_offers, _selectedCategoryId) { offers, selectedCategoryId ->
+    val filteredOffers = combine(
+        _offers,
+        _searchQuery,
+        _selectedCategoryId,
+        _filters
+    ) { offers, searchQuery, categoryId, filters ->
         offers.filter { offer ->
-            selectedCategoryId?.let { id ->
-                if (id == 1) true // "All Products"
-                else offer.categoryId == id
-            } ?: true
+            // Aquí va toda la lógica de filtrado que tienes en la UI
+            val matchCategory = categoryId == null || categoryId == 1 || offer.categoryId == categoryId
+            val matchSearch = if (searchQuery.isNotBlank()) {
+                offer.name.contains(searchQuery, ignoreCase = true) ||
+                        (offer.description?.contains(searchQuery, ignoreCase = true) == true)
+            } else true
+            val matchCondition = filters.condition?.let { offer.condition == it } ?: true
+            val matchPrice = filters.priceRange?.let { offer.price in it } ?: true
+            val matchLocation = filters.location?.let { offer.location.contains(it, ignoreCase = true) } ?: true
+
+            matchCategory && matchSearch && matchCondition && matchPrice && matchLocation
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
     fun updateCategoryId(categoryId: Int?) {
         _selectedCategoryId.value = categoryId
     }

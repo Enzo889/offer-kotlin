@@ -49,7 +49,7 @@ fun OfferListScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn {
-            items(offers) { offer ->
+            items(offers, key = { it.id!! }) { offer ->
                 OfferItem(
                     offer = offer,
                     onEdit = { navController.navigate("offer_form/${offer.id}") },

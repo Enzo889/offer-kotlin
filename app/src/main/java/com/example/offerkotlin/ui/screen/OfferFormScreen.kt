@@ -67,18 +67,19 @@ fun OfferFormScreen(
                 val newOffer = Offer(
                     id = offerId,
                     name = name,
-                    price = price.toDouble(),
-                    description = description,
-                    image = "/default.jpg", // Hardcodeado por ahora
+                    image = "/default.jpg",
                     stock = "Available",
+                    price = price.toDouble(), // Hardcodeado por ahora
                     discount = 0,
                     installments = "",
                     shipping = "",
+                    description = description,
+                    category = "",
                     categoryId = 0,
                     condition = "new",
                     seller = "Me",
                     location = "Unknown",
-                    isOwner = true
+                    isOwner = true,
                 )
                 if (offerId == -1) {
                     viewModel.createOffer(newOffer)

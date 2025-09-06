@@ -11,49 +11,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.offerkotlin.data.model.Category
-import com.example.offerkotlin.data.model.Filters
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.offerkotlin.data.model.categories
 import com.example.offerkotlin.ui.components.FilterDialog
 import com.example.offerkotlin.viewmodel.OfferViewModel
+import com.example.offerkotlin.data.model.Filters
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OfferScreen(viewModel: OfferViewModel) {
-    // Estados que provienen del ViewModel
-    val offers by viewModel.offers.collectAsState() // Todas las ofertas
+fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
+    // ESTADOS: TODO EL ESTADO PROVIENE DEL VIEWMODEL
+    val filteredOffers by viewModel.filteredOffers.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentFilters by viewModel.filters.collectAsState()
+    val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
 
-    // Estado para la categoría actual
-    var currentCategory by remember { mutableStateOf(categories.first()) }
+    // Este es un estado derivado del ViewModel, por lo que se actualiza automáticamente.
+    val currentCategory = categories.find { it.id == selectedCategoryId } ?: categories.first()
 
-    // Estados locales
+    // ESTADOS LOCALES: Solo para controlar la visibilidad de los diálogos
     var showCreateDialog by remember { mutableStateOf(false) }
     var showFilterDialog by remember { mutableStateOf(false) }
 
-    /** --------- LÓGICA DE FILTRADO --------- */
-    val filteredOffers = offers.filter { offer ->
-        val matchCategory = currentCategory.id == 1 || offer.categoryId == currentCategory.id
-
-        val matchCondition = currentFilters.condition?.let {
-            offer.condition == it
-        } ?: true
-
-        val matchPrice = currentFilters.priceRange?.let {
-            offer.price in it
-        } ?: true
-
-        val matchLocation = currentFilters.location?.let {
-            offer.location.contains(it, ignoreCase = true)
-        } ?: true
-
-        val matchSearch = if (searchQuery.isNotBlank()) {
-            offer.name.contains(searchQuery, ignoreCase = true) ||
-                    (offer.description?.contains(searchQuery, ignoreCase = true) == true)
-        } else true
-
-        matchCategory && matchCondition && matchPrice && matchLocation && matchSearch
+    LaunchedEffect(Unit) {
+        viewModel.offerCreated.collect {
+            // Al recibir la notificación, recarga la lista
+            viewModel.fetchOffers()
+        }
     }
 
     Scaffold(
@@ -64,7 +49,7 @@ fun OfferScreen(viewModel: OfferViewModel) {
         },
         topBar = {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Encabezado con título y botón de filtros
+                // Encabezado y botón de filtros
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -74,15 +59,11 @@ fun OfferScreen(viewModel: OfferViewModel) {
                         "Marketplace",
                         style = MaterialTheme.typography.headlineMedium
                     )
-
-                    // Botón para abrir modal de filtros
                     IconButton(onClick = { showFilterDialog = true }) {
                         Icon(Icons.Default.Build, contentDescription = "Filtrar")
                     }
                 }
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 // Barra de búsqueda
                 OutlinedTextField(
                     value = searchQuery,
@@ -102,17 +83,15 @@ fun OfferScreen(viewModel: OfferViewModel) {
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            /** -------- FILTRO POR CATEGORÍA -------- */
+            // Filtro por categoría
             CategoryDropdown(
                 selectedCategory = currentCategory,
                 onCategoryChange = { category ->
-                    currentCategory = category
-                    // Notificamos al ViewModel, por si necesitas guardarlo allí
                     viewModel.updateCategoryId(if (category.id == 1) null else category.id)
                 }
             )
 
-            /** -------- LISTA DE OFERTAS -------- */
+            // LISTA DE OFERTAS: Se actualiza automáticamente
             if (filteredOffers.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -138,7 +117,7 @@ fun OfferScreen(viewModel: OfferViewModel) {
         }
     }
 
-    /** -------- MODAL PARA CREAR OFERTA -------- */
+    // MODAL PARA CREAR OFERTA
     if (showCreateDialog) {
         CreateOfferDialog(
             onDismiss = { showCreateDialog = false },
@@ -149,7 +128,7 @@ fun OfferScreen(viewModel: OfferViewModel) {
         )
     }
 
-    /** -------- MODAL DE FILTROS -------- */
+    // MODAL DE FILTROS
     if (showFilterDialog) {
         FilterDialog(
             onDismiss = { showFilterDialog = false },

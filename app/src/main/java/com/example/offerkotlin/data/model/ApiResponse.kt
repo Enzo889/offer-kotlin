@@ -1,7 +1,7 @@
 package com.example.offerkotlin.data.model
 
 data class ApiResponse<T>(
-    val status: Int,
+    val status: String,
     val message: String,
-    val data: T?
+    val data: T? = null
 )

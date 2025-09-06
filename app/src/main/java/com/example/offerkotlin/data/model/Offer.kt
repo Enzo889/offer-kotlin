@@ -14,5 +14,6 @@ data class Offer(
     val condition: String,
     val seller: String? = null,
     val location: String,
-    val isOwner: Boolean? = null
+    val isOwner: Boolean? = null,
+    val category: String
 )
