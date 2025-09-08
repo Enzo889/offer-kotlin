@@ -23,6 +23,8 @@ fun OfferItem(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+
+
     Card(
         modifier = Modifier
             .fillMaxWidth()

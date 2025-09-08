@@ -1,6 +1,6 @@
 package com.example.offerkotlin.viewmodel
 
-import android.R
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.offerkotlin.data.model.Filters
@@ -33,9 +33,17 @@ class OfferViewModel : ViewModel() {
     private val _offerCreated = MutableSharedFlow<Unit>()
     val offerCreated: SharedFlow<Unit> = _offerCreated
 
+    private val _refreshTrigger = MutableStateFlow(0)
+    val refreshTrigger: StateFlow<Int> = _refreshTrigger
+
 
     init {
         fetchOffers()
+    }
+
+
+    fun triggerRefresh() {
+        _refreshTrigger.value += 1
     }
 
     fun fetchOffers() {
@@ -69,22 +77,27 @@ class OfferViewModel : ViewModel() {
     }
 
 
-    fun updateOffer(id: Int, offer: Offer) {
+    fun updateOffer(updatedOffer: Offer) {
         viewModelScope.launch {
             try {
-                val response = repository.updateOffer(id, offer)
-                val updatedOffer = response.data
-                if (updatedOffer != null) {
-                    _offers.value = _offers.value.map { if (it.id == id) updatedOffer else it }
+                val response = repository.updateOffer(updatedOffer.id!!, updatedOffer)
+                val result = response.data
+                if (result != null) {
+                    // Emitir una lista NUEVA para que Compose detecte cambios
+                    _offers.value = _offers.value.map { offer ->
+                        if (offer.id == result.id) result else offer
+                    }.toList()
+
                     _message.value = "Oferta actualizada correctamente"
                 } else {
-                    _message.value = "Error: la API no devolvió datos"
+                    _message.value = "Error: no se pudo actualizar la oferta"
                 }
             } catch (e: Exception) {
                 _message.value = "Error al actualizar: ${e.message}"
             }
         }
     }
+
 
 
     fun deleteOffer(id: Int?) {
@@ -120,6 +133,7 @@ class OfferViewModel : ViewModel() {
         _selectedCategoryId,
         _filters
     ) { offers, searchQuery, categoryId, filters ->
+        Log.d("DEBUG", "Offers actualizadas -> ${offers.size}") // 👈 Visible en Logcat
         offers.filter { offer ->
             // Aquí va toda la lógica de filtrado que tienes en la UI
             val matchCategory = categoryId == null || categoryId == 1 || offer.categoryId == categoryId

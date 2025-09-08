@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +17,7 @@ import com.example.offerkotlin.data.model.categories
 import com.example.offerkotlin.ui.components.FilterDialog
 import com.example.offerkotlin.viewmodel.OfferViewModel
 import com.example.offerkotlin.data.model.Filters
+import com.example.offerkotlin.data.model.Offer
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,10 +36,16 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
     var showCreateDialog by remember { mutableStateOf(false) }
     var showFilterDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.offerCreated.collect {
-            // Al recibir la notificación, recarga la lista
+    var offerToEdit by remember { mutableStateOf<Offer?>(null) }
+
+    var isRefreshing by remember { mutableStateOf(false) }
+
+
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
             viewModel.fetchOffers()
+            isRefreshing = false // Una vez que la llamada finalice, el estado vuelve a ser false
         }
     }
 
@@ -100,17 +108,26 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
                     Text("No hay ofertas disponibles", style = MaterialTheme.typography.bodyMedium)
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { isRefreshing = true },
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    items(filteredOffers) { offer ->
-                        OfferItem(
-                            offer = offer,
-                            onDelete = { viewModel.deleteOffer(offer.id!!) },
-                            onEdit = {}
-                        )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = filteredOffers,
+                            key = { it.id!! }
+                        ) { offer ->
+                            OfferItem(
+                                offer = offer,
+                                onEdit = { offerToEdit = offer },
+                                onDelete = { viewModel.deleteOffer(offer.id!!) }
+                            )
+                        }
                     }
                 }
             }
@@ -123,10 +140,23 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
             onDismiss = { showCreateDialog = false },
             onCreate = { newOffer ->
                 viewModel.createOffer(newOffer)
+                viewModel.fetchOffers()
                 showCreateDialog = false
             }
         )
     }
+    if (offerToEdit != null) {
+        EditOfferDialog(
+            offer = offerToEdit!!,
+            onDismiss = { offerToEdit = null },
+            onSave = { updatedOffer ->
+                viewModel.updateOffer(updatedOffer)
+                viewModel.fetchOffers()
+                offerToEdit = null
+            }
+        )
+    }
+
 
     // MODAL DE FILTROS
     if (showFilterDialog) {

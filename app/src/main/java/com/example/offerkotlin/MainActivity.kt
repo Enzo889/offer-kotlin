@@ -12,7 +12,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.offerkotlin.ui.screen.OfferFormScreen
 import com.example.offerkotlin.ui.screen.OfferScreen
 import com.example.offerkotlin.ui.theme.OfferKotlinTheme
 import com.example.offerkotlin.viewmodel.OfferViewModel
@@ -43,23 +42,7 @@ class MainActivity : ComponentActivity() {
                             OfferScreen(viewModel = offerViewModel)
                         }
 
-                        // Pantalla de creación o edición
-                        composable(
-                            route = Routes.OFFER_FORM,
-                            arguments = listOf(
-                                navArgument("offerId") {
-                                    type = NavType.IntType
-                                    defaultValue = -1 // -1 significa que se va a crear una nueva oferta
-                                }
-                            )
-                        ) { backStackEntry ->
-                            val offerId = backStackEntry.arguments?.getInt("offerId") ?: -1
-                            OfferFormScreen(
-                                navController = navController,
-                                viewModel = offerViewModel,
-                                offerId = offerId
-                            )
-                        }
+
                     }
                 }
             }

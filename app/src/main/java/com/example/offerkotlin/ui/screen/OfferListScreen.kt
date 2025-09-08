@@ -26,7 +26,7 @@ fun OfferListScreen(
     navController: NavHostController,
     viewModel: OfferViewModel
 ) {
-    val offers by viewModel.offers.collectAsState()
+    val offers by viewModel.filteredOffers.collectAsState()
     val message by viewModel.message.collectAsState()
 
     // Cargar datos al iniciar
