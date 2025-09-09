@@ -27,10 +27,10 @@ fun CategoryDropdown(
             value = selectedCategory.name,
             onValueChange = {},
             readOnly = true,
-            label = { Text("Category") },
+            label = { Text("Categorías") },
             trailingIcon = {
                 IconButton(onClick = { expanded = !expanded }) {
-                    Icon(Icons.Filled.ArrowDropDown, contentDescription = "Select category")
+                    Icon(Icons.Filled.ArrowDropDown, contentDescription = "Selecciona una categoria")
                 }
             },
             modifier = Modifier

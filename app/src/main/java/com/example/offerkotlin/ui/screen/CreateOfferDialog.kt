@@ -27,7 +27,7 @@ fun CreateOfferDialog(
     var selectedCategory by remember { mutableStateOf(categories.first()) }
 
     // Dropdown de Condiciones
-    val conditions = listOf("new", "like-new", "used")
+    val conditions = listOf("Nuevo", "Como Nuevo", "Usado")
     var expandedCondition by remember { mutableStateOf(false) }
     var selectedCondition by remember { mutableStateOf(conditions.first()) }
 

@@ -23,29 +23,25 @@ import com.example.offerkotlin.data.model.Offer
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
-    // ESTADOS: TODO EL ESTADO PROVIENE DEL VIEWMODEL
     val filteredOffers by viewModel.filteredOffers.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentFilters by viewModel.filters.collectAsState()
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsState()
 
-    // Este es un estado derivado del ViewModel, por lo que se actualiza automáticamente.
     val currentCategory = categories.find { it.id == selectedCategoryId } ?: categories.first()
 
-    // ESTADOS LOCALES: Solo para controlar la visibilidad de los diálogos
     var showCreateDialog by remember { mutableStateOf(false) }
     var showFilterDialog by remember { mutableStateOf(false) }
-
     var offerToEdit by remember { mutableStateOf<Offer?>(null) }
-
     var isRefreshing by remember { mutableStateOf(false) }
 
-
+    // Nuevo estado para manejar la confirmación de eliminación
+    var offerToDelete by remember { mutableStateOf<Offer?>(null) }
 
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             viewModel.fetchOffers()
-            isRefreshing = false // Una vez que la llamada finalice, el estado vuelve a ser false
+            isRefreshing = false
         }
     }
 
@@ -57,11 +53,10 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
         },
         topBar = {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Encabezado y botón de filtros
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         "Marketplace",
@@ -72,7 +67,6 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                // Barra de búsqueda
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { viewModel.updateSearchQuery(it) },
@@ -91,7 +85,6 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
-            // Filtro por categoría
             CategoryDropdown(
                 selectedCategory = currentCategory,
                 onCategoryChange = { category ->
@@ -99,7 +92,6 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
                 }
             )
 
-            // LISTA DE OFERTAS: Se actualiza automáticamente
             if (filteredOffers.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -125,7 +117,8 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
                             OfferItem(
                                 offer = offer,
                                 onEdit = { offerToEdit = offer },
-                                onDelete = { viewModel.deleteOffer(offer.id!!) }
+                                // Cambiamos para que solo abra el diálogo
+                                onDelete = { offerToDelete = offer }
                             )
                         }
                     }
@@ -134,7 +127,7 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
         }
     }
 
-    // MODAL PARA CREAR OFERTA
+    // Dialog para crear oferta
     if (showCreateDialog) {
         CreateOfferDialog(
             onDismiss = { showCreateDialog = false },
@@ -145,6 +138,8 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
             }
         )
     }
+
+    // Dialog para editar oferta
     if (offerToEdit != null) {
         EditOfferDialog(
             offer = offerToEdit!!,
@@ -157,8 +152,32 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
         )
     }
 
+    // Dialog para confirmar eliminación
+    if (offerToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { offerToDelete = null },
+            title = { Text("Confirmar eliminación") },
+            text = { Text("¿Estás seguro de que deseas eliminar esta oferta?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteOffer(offerToDelete!!.id!!)
+                        offerToDelete = null
+                        viewModel.fetchOffers() // Recarga las ofertas
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { offerToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
-    // MODAL DE FILTROS
+    // Modal de filtros
     if (showFilterDialog) {
         FilterDialog(
             onDismiss = { showFilterDialog = false },

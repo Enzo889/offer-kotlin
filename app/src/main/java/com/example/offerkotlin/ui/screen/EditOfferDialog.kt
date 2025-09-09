@@ -30,7 +30,7 @@ fun EditOfferDialog(
     }
 
     // Condición
-    val conditions = listOf("new", "like-new", "used")
+    val conditions = listOf("Nuevo", "Como Nuevo", "Usado")
     var expandedCondition by remember { mutableStateOf(false) }
     var selectedCondition by remember {
         mutableStateOf(offer.condition.ifBlank { conditions.first() })

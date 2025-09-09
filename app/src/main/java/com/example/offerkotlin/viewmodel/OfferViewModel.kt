@@ -33,8 +33,6 @@ class OfferViewModel : ViewModel() {
     private val _offerCreated = MutableSharedFlow<Unit>()
     val offerCreated: SharedFlow<Unit> = _offerCreated
 
-    private val _refreshTrigger = MutableStateFlow(0)
-    val refreshTrigger: StateFlow<Int> = _refreshTrigger
 
 
     init {
@@ -42,9 +40,6 @@ class OfferViewModel : ViewModel() {
     }
 
 
-    fun triggerRefresh() {
-        _refreshTrigger.value += 1
-    }
 
     fun fetchOffers() {
         viewModelScope.launch {
@@ -134,20 +129,34 @@ class OfferViewModel : ViewModel() {
         _filters
     ) { offers, searchQuery, categoryId, filters ->
         Log.d("DEBUG", "Offers actualizadas -> ${offers.size}") // 👈 Visible en Logcat
+
         offers.filter { offer ->
-            // Aquí va toda la lógica de filtrado que tienes en la UI
-            val matchCategory = categoryId == null || categoryId == 1 || offer.categoryId == categoryId
+            // --- Filtrado por categoría ---
+            val matchCategory = when (categoryId) {
+                null -> true // Si no hay categoría seleccionada, mostrar todas
+                1 -> true    // Si es categoría 1, mostrar todas
+                2 -> offer.discount != null && offer.discount > 0 // 👈 SOLO con descuento
+                else -> offer.categoryId == categoryId
+            }
+
+            // --- Búsqueda por nombre o descripción ---
             val matchSearch = if (searchQuery.isNotBlank()) {
                 offer.name.contains(searchQuery, ignoreCase = true) ||
                         (offer.description?.contains(searchQuery, ignoreCase = true) == true)
             } else true
+
+            // --- Otros filtros opcionales ---
             val matchCondition = filters.condition?.let { offer.condition == it } ?: true
             val matchPrice = filters.priceRange?.let { offer.price in it } ?: true
-            val matchLocation = filters.location?.let { offer.location.contains(it, ignoreCase = true) } ?: true
+            val matchLocation = filters.location?.let {
+                offer.location.contains(it, ignoreCase = true)
+            } ?: true
 
+            // --- Resultado final ---
             matchCategory && matchSearch && matchCondition && matchPrice && matchLocation
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     fun updateCategoryId(categoryId: Int?) {
         _selectedCategoryId.value = categoryId
     }

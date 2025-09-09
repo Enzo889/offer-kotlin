@@ -6,20 +6,20 @@ data class Category(
 )
 
 val categories = listOf(
-    Category(1, "All Products"),
-    Category(2, "Offers & Special Price"),
-    Category(3, "Fashion & Apparel"),
-    Category(4, "Electronics & Gadgets"),
-    Category(5, "Home & Living"),
-    Category(6, "Health & Beauty"),
-    Category(7, "Sports & Fitness"),
-    Category(8, "Books & Media"),
-    Category(9, "Art & Crafts"),
-    Category(10, "Food & Beverages"),
-    Category(11, "Toys & Games"),
-    Category(12, "Automotive & Tools"),
-    Category(13, "Pet Supplies"),
-    Category(14, "Travel & Luggage"),
-    Category(15, "Musical Instruments"),
-    Category(16, "Office & Stationery")
+    Category(1, "Todos los productos"),
+    Category(2, "Ofertas y precios especiales"),
+    Category(3, "Moda y ropa"),
+    Category(4, "Electrónica y gadgets"),
+    Category(5, "Hogar y decoración"),
+    Category(6, "Salud y belleza"),
+    Category(7, "Deportes y fitness"),
+    Category(8, "Libros y medios"),
+    Category(9, "Arte y manualidades"),
+    Category(10, "Alimentos y bebidas"),
+    Category(11, "Juguetes y juegos"),
+    Category(12, "Automóviles y herramientas"),
+    Category(13, "Mascotas y accesorios"),
+    Category(14, "Viajes y equipaje"),
+    Category(15, "Instrumentos musicales"),
+    Category(16, "Oficina y papelería")
 )
