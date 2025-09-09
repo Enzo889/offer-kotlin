@@ -22,7 +22,8 @@ import com.example.offerkotlin.data.model.Offer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
+fun OfferScreen(viewModel: OfferViewModel = viewModel(),
+                navController: androidx.navigation.NavController) {
     val filteredOffers by viewModel.filteredOffers.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val currentFilters by viewModel.filters.collectAsState()
@@ -117,8 +118,10 @@ fun OfferScreen(viewModel: OfferViewModel = viewModel()) {
                             OfferItem(
                                 offer = offer,
                                 onEdit = { offerToEdit = offer },
-                                // Cambiamos para que solo abra el diálogo
-                                onDelete = { offerToDelete = offer }
+                                onDelete = { offerToDelete = offer },
+                                onClick = {
+                                    navController.navigate("offer_detail/${offer.id}")
+                                }
                             )
                         }
                     }
