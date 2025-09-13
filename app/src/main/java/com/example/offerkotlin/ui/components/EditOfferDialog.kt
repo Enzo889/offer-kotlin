@@ -1,4 +1,4 @@
-package com.example.offerkotlin.ui.screen
+package com.example.offerkotlin.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

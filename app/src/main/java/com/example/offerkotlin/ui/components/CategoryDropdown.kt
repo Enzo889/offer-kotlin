@@ -1,6 +1,5 @@
-package com.example.offerkotlin.ui.screen
+package com.example.offerkotlin.ui.components
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown

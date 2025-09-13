@@ -18,6 +18,10 @@ import com.example.offerkotlin.ui.components.FilterDialog
 import com.example.offerkotlin.viewmodel.OfferViewModel
 import com.example.offerkotlin.data.model.Filters
 import com.example.offerkotlin.data.model.Offer
+import com.example.offerkotlin.ui.components.CategoryDropdown
+import com.example.offerkotlin.ui.components.CreateOfferDialog
+import com.example.offerkotlin.ui.components.EditOfferDialog
+import com.example.offerkotlin.ui.components.OfferItem
 
 
 @OptIn(ExperimentalMaterial3Api::class)
